@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 type User struct {
@@ -20,6 +22,9 @@ var users = []User{
 }
 
 func main() {
+
+	fmt.Println("Starting the server")
+	connectDB()
 
 	router := mux.NewRouter()
 
@@ -122,4 +127,22 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("There was an error encoding the user")
 		}
 	}
+}
+
+// Database connection
+
+func getEnv(key string) string {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("error loading enviroment variables")
+	}
+
+	return os.Getenv(key)
+
+}
+
+func connectDB() {
+	dsn := getEnv("DSN")
+	fmt.Println(dsn)
+
 }
