@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -24,11 +25,15 @@ var users = []User{
 func main() {
 
 	fmt.Println("Starting the server")
+	time.Sleep(time.Second * 1)
+
 	connectDB()
+	time.Sleep(time.Second * 1)
 
 	router := mux.NewRouter()
 
 	// CRUD handlers
+	fmt.Println("Setting up routes")
 	router.HandleFunc("/create", createUser).Methods("POST")
 	router.HandleFunc("/read/{name}", readUser).Methods("GET")
 	router.HandleFunc("/update", updateUser).Methods("PUT")
@@ -36,7 +41,9 @@ func main() {
 
 	// To test after performing CRUD operations
 	router.HandleFunc("/users", getUsers).Methods("GET")
+	time.Sleep(time.Second * 1)
 
+	fmt.Println("Listening on port 3000")
 	http.ListenAndServe(":3000", router)
 }
 
@@ -56,9 +63,6 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("There was en error encoding the response")
 	}
-
-	fmt.Fprintln(w, user.Name)
-	fmt.Fprintln(w, user.ID)
 
 }
 
@@ -129,7 +133,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Database connection
+// Enviroment helper function
 
 func getEnv(key string) string {
 	err := godotenv.Load()
@@ -141,7 +145,10 @@ func getEnv(key string) string {
 
 }
 
+// Connecting to DB
+
 func connectDB() {
+	fmt.Println("Connecting to Database")
 	dsn := getEnv("DSN")
 	fmt.Println(dsn)
 
