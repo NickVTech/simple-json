@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -147,9 +150,48 @@ func getEnv(key string) string {
 
 // Connecting to DB
 
-func connectDB() {
-	fmt.Println("Connecting to Database")
-	dsn := getEnv("DSN")
-	fmt.Println(dsn)
+var db *sql.DB
 
+func connectDB() {
+	var err error
+	dsn := getEnv("DSN")
+
+	db, err = sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatalf("failed to connect: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(); err != nil {
+		log.Fatalf("failed to ping: %v", err)
+	}
+	log.Println("Successfully connected to PlanetScale!")
+
+	addTestData()
+
+}
+
+func addTestData() {
+	for _, user := range users {
+
+		var count int
+		err := db.QueryRow("SELECT COUNT(*) FROM Users WHERE ID = ?", user.ID).Scan(&count)
+		if err != nil {
+			log.Println("Failed to check user existence:", err)
+			continue
+		}
+
+		if count == 0 {
+			_, err := db.Exec("INSERT INTO Users (name, ID) VALUES (?, ?)", user.Name, user.ID)
+			if err != nil {
+				log.Println("Failed to insert user:", err)
+			} else {
+				fmt.Printf("User %s inserted\n", user.Name)
+			}
+		} else {
+			fmt.Printf("User %s already exists\n", user.Name)
+		}
+	}
+
+	fmt.Println("Test data synchronization complete")
 }
